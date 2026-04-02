@@ -12,6 +12,7 @@ PROJECT_ID = "project-0a33b36a-f359-40ab-93b"
 REGION = "us-central1"
 CLUSTER_NAME = "sales-pipeline-cluster"
 BUCKET = "gs://sales-pipeline-demo-261244601320"
+METASTORE_SERVICE = f"projects/{PROJECT_ID}/locations/{REGION}/services/sales-metastore"
 
 CLUSTER_CONFIG = {
     "master_config": {
@@ -25,6 +26,8 @@ CLUSTER_CONFIG = {
         "disk_config": {"boot_disk_size_gb": 50},
     },
     "software_config": {"image_version": "2.1-debian11"},
+    # Attach Dataproc Metastore so table definitions persist across cluster restarts
+    "metastore_config": {"dataproc_metastore_service": METASTORE_SERVICE},
 }
 
 SPARKSQL_JOB = {
