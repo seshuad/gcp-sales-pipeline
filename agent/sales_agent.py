@@ -48,7 +48,8 @@ def query_bigquery(sql: str) -> dict:
 
 # ── Agent setup ──────────────────────────────────────────────────────────────
 
-client = genai.Client(vertexai=True, project=PROJECT_ID, location=REGION)
+import os
+client = genai.Client(api_key=os.environ["GEMINI_API_KEY"])
 
 query_bigquery_tool = types.Tool(
     function_declarations=[
@@ -110,7 +111,7 @@ def run_agent():
         # Agentic loop — keep going until no more tool calls
         while True:
             response = client.models.generate_content(
-                model="gemini-2.0-flash-001",
+                model="gemini-2.5-flash",
                 contents=history,
                 config=config,
             )
