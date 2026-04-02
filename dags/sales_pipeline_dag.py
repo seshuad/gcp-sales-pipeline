@@ -15,7 +15,7 @@ BATCH_CONFIG = {
     "pyspark_batch": {
         "main_python_file_uri": f"{BUCKET}/scripts/sales_transform.py",
         "jar_file_uris": [
-            "gs://spark-lib/iceberg/iceberg-spark-runtime-3.3_2.12-1.3.1.jar"
+            "gs://spark-lib/iceberg/iceberg-spark-runtime-3.5_2.12-1.6.1.jar"
         ],
     },
     "environment_config": {
