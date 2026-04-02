@@ -6,29 +6,58 @@ PROJECT_ID = "project-0a33b36a-f359-40ab-93b"
 REGION = "us-central1"
 
 SCHEMA_CONTEXT = """
-You have access to the following BigQuery tables in the sales_processed dataset:
+You have access to the following BigQuery tables:
 
-1. revenue_by_region
+--- Dataset: sales_raw (raw transactional data, all order statuses) ---
+
+1. sales_raw.orders
+   - order_id (STRING): unique order identifier
+   - customer_id (STRING): foreign key to customers
+   - product_id (STRING): foreign key to products
+   - quantity (INTEGER): number of units ordered
+   - unit_price (FLOAT): price per unit in USD
+   - order_date (DATE): date of order
+   - status (STRING): completed, pending, cancelled
+
+2. sales_raw.customers
+   - customer_id (STRING): unique customer identifier
+   - name (STRING): customer full name
+   - email (STRING): customer email
    - region (STRING): North, South, East, West
-   - total_orders (INTEGER): number of completed orders
-   - total_revenue (FLOAT): total revenue in USD
-   - avg_order_value (FLOAT): average order value in USD
+   - signup_date (DATE): date customer signed up
 
-2. revenue_by_product
-   - product_id (STRING)
+3. sales_raw.products
+   - product_id (STRING): unique product identifier
    - product_name (STRING): Laptop, Monitor, Keyboard, Mouse, Headset, Webcam, Desk Chair, USB Hub
+   - unit_price (FLOAT): price in USD
    - category (STRING): Electronics
+
+--- Dataset: sales_processed (pre-aggregated, completed orders only, 2024) ---
+
+4. sales_processed.revenue_by_region
+   - region (STRING): North, South, East, West
+   - total_orders (INTEGER)
+   - total_revenue (FLOAT)
+   - avg_order_value (FLOAT)
+
+5. sales_processed.revenue_by_product
+   - product_id (STRING)
+   - product_name (STRING)
+   - category (STRING)
    - units_sold (INTEGER)
    - total_revenue (FLOAT)
 
-3. monthly_trend
+6. sales_processed.monthly_trend
    - month (STRING): format YYYY-MM
    - total_orders (INTEGER)
    - total_revenue (FLOAT)
 
-Data covers completed orders only for year 2024.
-Always use fully qualified table names:
-  `project-0a33b36a-f359-40ab-93b.sales_processed.<table_name>`
+--- Query guidance ---
+- Use sales_processed tables for revenue/trend questions (faster, pre-aggregated)
+- Use sales_raw tables for order-level, customer-level, or status-based questions
+- Always use fully qualified names:
+    `project-0a33b36a-f359-40ab-93b.sales_raw.<table>`
+    `project-0a33b36a-f359-40ab-93b.sales_processed.<table>`
 """
 
 
