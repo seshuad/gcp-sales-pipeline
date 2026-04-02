@@ -1,6 +1,7 @@
 from datetime import datetime, timedelta
 
 from airflow import DAG
+from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
 from airflow.providers.google.cloud.operators.dataproc import (
     DataprocCreateClusterOperator,
     DataprocDeleteClusterOperator,
@@ -50,6 +51,23 @@ SPARKSQL_JOB = {
     },
 }
 
+BQ_DATASET = "sales_processed"
+
+# CREATE OR REPLACE so the task is idempotent on every DAG run
+BQ_EXTERNAL_TABLES_SQL = f"""
+CREATE OR REPLACE EXTERNAL TABLE `{PROJECT_ID}.{BQ_DATASET}.revenue_by_region`
+WITH CONNECTION DEFAULT
+OPTIONS (format = 'ICEBERG', uris = ['{BUCKET}/processed/revenue_by_region']);
+
+CREATE OR REPLACE EXTERNAL TABLE `{PROJECT_ID}.{BQ_DATASET}.revenue_by_product`
+WITH CONNECTION DEFAULT
+OPTIONS (format = 'ICEBERG', uris = ['{BUCKET}/processed/revenue_by_product']);
+
+CREATE OR REPLACE EXTERNAL TABLE `{PROJECT_ID}.{BQ_DATASET}.monthly_trend`
+WITH CONNECTION DEFAULT
+OPTIONS (format = 'ICEBERG', uris = ['{BUCKET}/processed/monthly_trend']);
+"""
+
 default_args = {
     "owner": "airflow",
     "retries": 1,
@@ -80,6 +98,17 @@ with DAG(
         project_id=PROJECT_ID,
     )
 
+    register_bq_tables = BigQueryInsertJobOperator(
+        task_id="register_bq_tables",
+        project_id=PROJECT_ID,
+        configuration={
+            "query": {
+                "query": BQ_EXTERNAL_TABLES_SQL,
+                "useLegacySql": False,
+            }
+        },
+    )
+
     # TriggerRule.ALL_DONE ensures cluster is deleted even if the job fails
     delete_cluster = DataprocDeleteClusterOperator(
         task_id="delete_cluster",
@@ -89,4 +118,4 @@ with DAG(
         trigger_rule=TriggerRule.ALL_DONE,
     )
 
-    create_cluster >> run_sparksql >> delete_cluster
+    create_cluster >> run_sparksql >> register_bq_tables >> delete_cluster
